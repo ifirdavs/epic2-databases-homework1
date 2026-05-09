@@ -1,7 +1,7 @@
 services:
   postgres:
-    # image: postgres:17.4
-    image: postgres:latest
+    image: postgres:17.4
+    # image: postgres:latest
     container_name: postgres
     environment:
       POSTGRES_USER: myuser

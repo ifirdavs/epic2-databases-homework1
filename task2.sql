@@ -3,64 +3,106 @@
 
 
 -- 1. Population per square mile for each country.
-WITH country_density AS (
-    SELECT
-        Code,
-        Name,
-        Population,
-        SurfaceArea AS SurfaceAreaSquareMiles,
-        CAST(Population AS REAL) / SurfaceArea AS PopulationPerSquareMile
-    FROM country
-    WHERE SurfaceArea > 0
-)
+-- WITH country_density AS (
+--     SELECT
+--         Code,
+--         Name,
+--         Population,
+--         SurfaceArea AS SurfaceAreaSquareMiles,
+--         CAST(Population AS REAL) / SurfaceArea AS PopulationPerSquareMile
+--     FROM country
+--     WHERE SurfaceArea > 0
+-- )
+-- SELECT
+--     Code,
+--     Name,
+--     Population,
+--     ROUND(SurfaceAreaSquareMiles, 2) AS SurfaceAreaSquareMiles,
+--     ROUND(PopulationPerSquareMile, 4) AS PopulationPerSquareMile
+-- FROM country_density
+-- ORDER BY Name;
+
 SELECT
     Code,
     Name,
     Population,
-    ROUND(SurfaceAreaSquareMiles, 2) AS SurfaceAreaSquareMiles,
-    ROUND(PopulationPerSquareMile, 4) AS PopulationPerSquareMile
-FROM country_density
+    SurfaceArea AS SurfaceAreaSquareMiles,
+    ROUND(CAST(Population AS REAL) / SurfaceArea, 4) AS PopulationPerSquareMile
+FROM country
+WHERE SurfaceArea > 0
 ORDER BY Name;
 
 
 
 -- 2. Minimum, Maximum, and Median in three rows.
-WITH country_density AS (
-    SELECT
-        Code,
-        Name,
-        CAST(Population AS REAL) / SurfaceArea AS PopulationPerSquareMile
-    FROM country
-    WHERE SurfaceArea > 0
-),
-ordered_density AS (
-    SELECT
-        PopulationPerSquareMile,
-        row_number() OVER (ORDER BY PopulationPerSquareMile) AS rn,
-        count(*) OVER () AS total_rows
-    FROM country_density
-),
-median_density AS (
-    SELECT
-        avg(PopulationPerSquareMile) AS MedianValue
-    FROM ordered_density
-    WHERE rn IN ((total_rows + 1) / 2, (total_rows + 2) / 2)
-)
+-- WITH 
+--     country_density AS (
+--         SELECT
+--             Code,
+--             Name,
+--             CAST(Population AS REAL) / SurfaceArea AS PopulationPerSquareMile
+--         FROM country
+--         WHERE SurfaceArea > 0
+--     ),
+--     ordered_density AS (
+--         SELECT
+--             PopulationPerSquareMile,
+--             row_number() OVER (ORDER BY PopulationPerSquareMile) AS rn,
+--             count(*) OVER () AS total_rows
+--         FROM country_density
+--     ),
+--     median_density AS (
+--         SELECT
+--             avg(PopulationPerSquareMile) AS MedianValue
+--         FROM ordered_density
+--         WHERE rn IN ((total_rows + 1) / 2, (total_rows + 2) / 2)
+--     )
+-- SELECT
+--     'Minimum' AS Metric,
+--     ROUND(min(PopulationPerSquareMile), 4) AS Value
+-- FROM country_density
+
+-- UNION ALL
+
+-- SELECT
+--     'Maximum' AS Metric,
+--     ROUND(max(PopulationPerSquareMile), 4) AS Value
+-- FROM country_density
+
+-- UNION ALL
+
+-- SELECT
+--     'Median' AS Metric,
+--     ROUND(MedianValue, 4) AS Value
+-- FROM median_density;
+
+
+---- SQLite does have built-in median() function:
+WITH 
+	country_density AS (
+	    SELECT
+	        Code,
+	        Name,
+	        CAST(Population AS REAL) / SurfaceArea AS PopulationPerSquareMile
+	    FROM country
+	    WHERE SurfaceArea > 0
+	)
+
 SELECT
     'Minimum' AS Metric,
-    ROUND(min(PopulationPerSquareMile), 4) AS Value
+    min(PopulationPerSquareMile) AS Value
 FROM country_density
 
 UNION ALL
 
 SELECT
     'Maximum' AS Metric,
-    ROUND(max(PopulationPerSquareMile), 4) AS Value
+    max(PopulationPerSquareMile) AS Value
 FROM country_density
 
 UNION ALL
 
 SELECT
     'Median' AS Metric,
-    ROUND(MedianValue, 4) AS Value
-FROM median_density;
+    median(PopulationPerSquareMile) AS Value
+FROM country_density;
